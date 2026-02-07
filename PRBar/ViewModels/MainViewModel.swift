@@ -43,7 +43,7 @@ final class MainViewModel: ObservableObject {
         container.selectedPRIDs.contains(pr.stableID)
     }
 
-    func selectPR(_ pr: PullRequest) {
+    func selectPR(_ pr: PullRequest?) {
         container.selectionState.select(pr)
     }
 

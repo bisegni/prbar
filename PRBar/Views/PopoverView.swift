@@ -5,8 +5,13 @@ struct PopoverView: View {
     @ObservedObject var detailsViewModel: PRDetailsViewModel
     let pinToMonitor: () -> Void
     let openSettings: () -> Void
+    let quitApp: () -> Void
+    private let detailsPanelWidth: CGFloat = 430
+    private let detailsTransition: AnyTransition = .move(edge: .trailing).combined(with: .opacity)
 
     var body: some View {
+        let hasSelection = viewModel.selectedPR() != nil
+
         VStack(spacing: 8) {
             HStack(spacing: 8) {
                 VStack(spacing: 8) {
@@ -60,26 +65,37 @@ struct PopoverView: View {
                     List(viewModel.filteredPRs.filter { viewModel.currentSettings().includeDrafts || !$0.isDraft }, id: \.stableID) { pr in
                         PRRowView(pr: pr, selected: viewModel.selectedPR()?.stableID == pr.stableID)
                             .onTapGesture {
-                                viewModel.selectPR(pr)
-                                detailsViewModel.load(pr: pr)
+                                let isCurrentSelection = viewModel.selectedPR()?.stableID == pr.stableID
+                                withAnimation(.easeInOut(duration: 0.22)) {
+                                    viewModel.selectPR(isCurrentSelection ? nil : pr)
+                                }
+                                detailsViewModel.load(pr: isCurrentSelection ? nil : pr)
                             }
                     }
-                    .frame(minWidth: 260)
+                    .frame(minWidth: 260, maxWidth: .infinity)
                 }
+                .frame(maxWidth: hasSelection ? .infinity : nil)
 
-                Divider()
+                if hasSelection {
+                    Divider()
+                        .transition(.opacity)
 
-                PRDetailsPanelView(viewModel: viewModel, detailsViewModel: detailsViewModel) {
-                    pinToMonitor()
+                    PRDetailsPanelView(viewModel: viewModel, detailsViewModel: detailsViewModel) {
+                        pinToMonitor()
+                    }
+                    .frame(width: detailsPanelWidth)
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
+                    .transition(detailsTransition)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
+            .animation(.easeInOut(duration: 0.22), value: hasSelection)
 
             HStack {
                 Text(viewModel.tokenStatus()).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Settings", action: openSettings)
                 Button("Open Monitor") { pinToMonitor() }
+                Button("Quit", action: quitApp)
             }
 
             if let err = viewModel.error() {
