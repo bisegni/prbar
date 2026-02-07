@@ -30,7 +30,8 @@ final class StatusBarController {
             viewModel: viewModel,
             detailsViewModel: detailsViewModel,
             pinToMonitor: { [weak self] in self?.pinToMonitor() },
-            openSettings: { [weak self] in self?.showSettingsWindow() }
+            openSettings: { [weak self] in self?.showSettingsWindow() },
+            quitApp: { [weak self] in self?.quitApp() }
         ))
     }
 
@@ -54,7 +55,7 @@ final class StatusBarController {
 
         if settingsWindowController == nil {
             let window = NSWindow(contentRect: NSRect(x: 350, y: 350, width: 560, height: 620),
-                                  styleMask: [.titled, .closable, .miniaturizable],
+                                  styleMask: [.titled, .closable, .miniaturizable, .resizable],
                                   backing: .buffered,
                                   defer: false)
             window.title = "PRBar Settings"
@@ -67,5 +68,9 @@ final class StatusBarController {
         settingsWindowController?.showWindow(nil)
         settingsWindowController?.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func quitApp() {
+        NSApp.terminate(nil)
     }
 }
